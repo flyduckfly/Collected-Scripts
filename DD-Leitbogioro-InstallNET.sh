@@ -1330,6 +1330,7 @@ function checkSys() {
 		rm -rf /root/Fuck_Aliyun.sh
 	}
 
+	swapoff /swapspace
 	rm -rf /swapspace
 	# Allocate 512 MB temporary swap to provent yum dead.
 	if [[ ! -e "/swapspace" ]]; then
