@@ -1502,24 +1502,6 @@ function checkSys() {
     # ... (移除 Alpine Linux 的代码块，因为它已移到上面)
 }
 
-	# Alpine Linux necessary components and configurations.
-	[[ "$CurrentOS" == "AlpineLinux" ]] && {
-		# Get current version number of Alpine Linux
-		CurrentAlpineVer=$(cut -d. -f1,2 </etc/alpine-release)
-		# Try to remove comments of any valid mirror.
-		sed -i 's/#//' /etc/apk/repositories
-		# Add community mirror.
-		[[ ! $(grep -i "community" /etc/apk/repositories) ]] && sed -i '$a\http://dl-cdn.alpinelinux.org/alpine/v'${CurrentAlpineVer}'/community' /etc/apk/repositories
-		# Add testing mirror.
-		# [[ ! `grep -i "testing" /etc/apk/repositories` ]] && sed -i '$a\http://ftp.udx.icscoe.jp/Linux/alpine/edge/testing' /etc/apk/repositories
-		# Alpine Linux use "apk" as package management.
-		apk update
-		apk add bash bind-tools coreutils cpio curl dmidecode efibootmgr file gawk grep gzip jq lsblk net-tools openssl sed shadow tzdata util-linux virt-what wget xz
-		# Use bash to replace ash.
-		sed -i 's/root:\/bin\/ash/root:\/bin\/bash/g' /etc/passwd
-	}
-}
-
 function checkVER() {
 	# Get architecture of current os automatically
 	ArchName=$(uname -m)
