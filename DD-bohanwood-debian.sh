@@ -1023,3 +1023,5 @@ menuentry 'Debian Installer' --id debi {
     initrd $initrd
 }
 EOF
+
+echo "[Finish] Input 'reboot' to continue the subsequential installation."
