@@ -306,6 +306,17 @@ while [ $# -gt 0 ]; do
                 mirror_host=ftp.sg.debian.org
             fi
             ;;
+         --debian-tw)
+            dns='8.8.8.8 8.8.4.4'
+            dns6='2001:4860:4860::8888 2001:4860:4860::8844'
+            ntp=time.windows.com
+            if [ "$suite" = bullseye ]; then
+                echo "[INFO] Debian 11 (bullseye) 已 EOL，忽略 --debian-sg，强制使用 archive.debian.org"
+                mirror_host=archive.debian.org
+            else
+                mirror_host=ftp.tw.debian.org
+            fi
+            ;;
         --static-ipv4)
             ip=$(ip r get 1.1.1.1 | awk '/src/ {print $7}')
             gateway=$(ip r get 1.1.1.1 | awk '/via/ {print $3}')
