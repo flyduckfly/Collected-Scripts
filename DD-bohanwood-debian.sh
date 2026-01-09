@@ -281,6 +281,8 @@ while [ $# -gt 0 ]; do
         --cdn)
             ;;
         --aws)
+            dns='1.1.1.1 1.0.0.1'
+            dns6='2606:4700:4700::1111 2606:4700:4700::1001'
             mirror_host=cdn-aws.deb.debian.org
             ntp=time.aws.com
             ;;
