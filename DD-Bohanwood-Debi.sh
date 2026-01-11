@@ -291,6 +291,12 @@ while [ $# -gt 0 ]; do
             dns6='2606:4700:4700::1111 2606:4700:4700::1001'
             ntp=time.cloudflare.com
             ;;
+        --debian-hk)
+            dns='8.8.8.8 8.8.4.4'
+            dns6='2001:4860:4860::8888 2001:4860:4860::8844'
+            mirror_host=ftp.hk.debian.org
+            ntp=time.cloudflare.com
+            ;;
         --aliyun)
             dns='223.5.5.5 223.6.6.6'
             dns6='2400:3200::1 2400:3200:baba::1'
