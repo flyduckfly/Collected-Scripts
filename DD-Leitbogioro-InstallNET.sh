@@ -272,9 +272,9 @@ while [[ $# -ge 1 ]]; do
 		setDisk="$1"
 		shift
 		;;
-	- | -virtualmemory | -virtualram)
+	-swap | -virtualmemory | -virtualram)
 		shift
-		set="$1"
+		setSwap="$1"
 		shift
 		;;
 	-partition)
@@ -457,7 +457,7 @@ function selectMirror() {
 	mirrorStatus=0
 	declare -A MirrorBackup
 	if [[ "$IsCN" == "cn" ]]; then
-		MirrorBackup=(["debian0"]="" ["debian1"]="http://mirrors.ustc.edu.cn/debian" ["debian2"]="http://mirror.nju.edu.cn/debian" ["debian3"]="https://mirrors.tuna.tsinghua.edu.cn/debian" ["debian4"]="https://mirrors.aliyun.com/debian-archive/debian" ["ubuntu0"]="" ["ubuntu1"]="https://mirrors.ustc.edu.cn/ubuntu" ["ubuntu2"]="http://mirrors.xjtu.edu.cn/ubuntu" ["kali0"]="" ["kali1"]="https://mirrors.tuna.tsinghua.edu.cn/kali" ["kali2"]="http://mirrors.zju.edu.cn/kali" ["alpinelinux0"]="" ["alpinelinux1"]="http://mirror.nju.edu.cn/alpine" ["alpinelinux2"]="http://mirrors.tuna.tsinghua.edu.cn/alpine" ["centos0"]="" ["centos1"]="https://mirrors.ustc.edu.cn/centos-stream" ["centos2"]="https://mirrors.bfsu.edu.cn/centos-stream" ["centos3"]="https://mirrors.tuna.tsinghua.edu.cn/centos" ["centos4"]="http://mirror.nju.edu.cn/centos-altarch" ["centos5"]="https://mirrors.tuna.tsinghua.edu.cn/centos-vault" ["fedora0"]="" ["fedora1"]="https://mirrors.tuna.tsinghua.edu.cn/fedora" ["fedora2"]="https://mirrors.bfsu.edu.cn/fedora" ["rockylinux0"]="" ["rockylinux1"]="http://mirror.nju.edu.cn/rocky" ["rockylinux2"]="http://mirrors.sdu.edu.cn/rocky" ["almalinux0"]="" ["almalinux1"]="https://mirror.sjtu.edu.cn/almalinux" ["almalinux2"]="http://mirrors.neusoft.edu.cn/almalinux")
+		MirrorBackup=(["debian0"]="" ["debian1"]="http://mirror.sjtu.edu.cn/debian" ["debian2"]="http://mirror.nju.edu.cn/debian" ["debian3"]="https://mirrors.tuna.tsinghua.edu.cn/debian" ["debian4"]="https://mirrors.aliyun.com/debian-archive/debian" ["ubuntu0"]="" ["ubuntu1"]="https://mirrors.ustc.edu.cn/ubuntu" ["ubuntu2"]="http://mirrors.xjtu.edu.cn/ubuntu" ["kali0"]="" ["kali1"]="https://mirrors.tuna.tsinghua.edu.cn/kali" ["kali2"]="http://mirrors.zju.edu.cn/kali" ["alpinelinux0"]="" ["alpinelinux1"]="http://mirror.nju.edu.cn/alpine" ["alpinelinux2"]="http://mirrors.tuna.tsinghua.edu.cn/alpine" ["centos0"]="" ["centos1"]="https://mirrors.ustc.edu.cn/centos-stream" ["centos2"]="https://mirrors.bfsu.edu.cn/centos-stream" ["centos3"]="https://mirrors.tuna.tsinghua.edu.cn/centos" ["centos4"]="http://mirror.nju.edu.cn/centos-altarch" ["centos5"]="https://mirrors.tuna.tsinghua.edu.cn/centos-vault" ["fedora0"]="" ["fedora1"]="https://mirrors.tuna.tsinghua.edu.cn/fedora" ["fedora2"]="https://mirrors.bfsu.edu.cn/fedora" ["rockylinux0"]="" ["rockylinux1"]="http://mirror.nju.edu.cn/rocky" ["rockylinux2"]="http://mirrors.sdu.edu.cn/rocky" ["almalinux0"]="" ["almalinux1"]="https://mirror.sjtu.edu.cn/almalinux" ["almalinux2"]="http://mirrors.neusoft.edu.cn/almalinux")
 	else
 		MirrorBackup=(["debian0"]="" ["debian1"]="http://deb.debian.org/debian" ["debian2"]="http://mirrors.ocf.berkeley.edu/debian" ["debian3"]="http://ftp.yz.yamagata-u.ac.jp/pub/linux/debian" ["debian4"]="http://archive.debian.org/debian" ["ubuntu0"]="" ["ubuntu1"]="http://archive.ubuntu.com/ubuntu" ["ubuntu2"]="http://ports.ubuntu.com" ["kali0"]="" ["kali1"]="https://mirrors.ocf.berkeley.edu/kali" ["kali2"]="http://ftp.yz.yamagata-u.ac.jp/pub/linux/kali" ["alpinelinux0"]="" ["alpinelinux1"]="http://dl-cdn.alpinelinux.org/alpine" ["alpinelinux2"]="https://mirrors.edge.kernel.org/alpine" ["centos0"]="" ["centos1"]="http://mirror.stream.centos.org" ["centos2"]="http://mirrors.ocf.berkeley.edu/centos-stream" ["centos3"]="http://mirror.centos.org/centos" ["centos4"]="http://mirror.centos.org/altarch" ["centos5"]="http://vault.centos.org" ["fedora0"]="" ["fedora1"]="http://mirrors.rit.edu/fedora/fedora/linux" ["fedora2"]="http://ftp.iij.ad.jp/pub/linux/Fedora/fedora/linux" ["rockylinux0"]="" ["rockylinux1"]="http://download.rockylinux.org/pub/rocky" ["rockylinux2"]="http://mirrors.iu13.net/rocky" ["almalinux0"]="" ["almalinux1"]="http://repo.almalinux.org/almalinux" ["almalinux2"]="http://ftp.iij.ad.jp/pub/linux/almalinux")
 	fi
@@ -774,15 +774,15 @@ function diskType() {
 # https://blog.adachin.me/archives/3621
 # https://www.cnblogs.com/hukey/p/14919346.html
 #
-# $1 is "$linux_relese", $2 is "$disksNum", $3 is "$set", $4 is "$setDisk", $5 is "$partitionTable", $6 is "$setFileSystem", $7 is "$EfiSupport", $8 is "$diskCapacity", $9 is "$IncDisk", ${10} is "$AllDisks".
+# $1 is "$linux_relese", $2 is "$disksNum", $3 is "$setSwap", $4 is "$setDisk", $5 is "$partitionTable", $6 is "$setFileSystem", $7 is "$EfiSupport", $8 is "$diskCapacity", $9 is "$IncDisk", ${10} is "$AllDisks".
 function setNormalRecipe() {
-	[[ -n "$3" && $(echo "$3" | grep -o '[0-9]') ]] && Space="$set" || Space='0'
+	[[ -n "$3" && $(echo "$3" | grep -o '[0-9]') ]] && swapSpace="$setSwap" || swapSpace='0'
 	if [[ "$1" == 'debian' ]] || [[ "$1" == 'kali' ]]; then
 		[[ "$lowMemMode" == "1" ]] && {
-			[[ -z "$Space" || "$Space" -lt "512" ]] && Space="512"
+			[[ -z "$swapSpace" || "$swapSpace" -lt "512" ]] && swapSpace="512"
 		}
-		if [[ -n "$Space" && "$Space" -gt "0" ]]; then
-			Space=$(awk 'BEGIN{print '${swapSpace}'*1.05078125 }' | cut -d '.' -f '1')
+		if [[ -n "$swapSpace" && "$swapSpace" -gt "0" ]]; then
+			swapSpace=$(awk 'BEGIN{print '${swapSpace}'*1.05078125 }' | cut -d '.' -f '1')
 			swapRecipe=''${swapSpace}' 200 '${swapSpace}' linux-swap method{ swap } format{ } .'
 		else
 			swapRecipe=""
@@ -1023,6 +1023,7 @@ function getUserTimeZone() {
 		# because the "Sent-Q" can record the data packs which IP is active for current ssh user.
 		# The same as for IPv6s.
 		GuestIP=$(netstat -naputeoW | grep -i 'established' | grep -i 'sshd: '$loginUser'' | grep -iw '^tcp\|udp' | awk '{print $3,$5}' | sort -t ' ' -k 1 -rn | awk '{print $2}' | head -n 1 | cut -d':' -f'1')
+		[[ -z "$GuestIP" ]] && GuestIP=$(netstat -naputeoW | grep -i 'established' | grep -i "sshd-session" | grep -i "on" | grep -iw '^tcp\|udp' | awk '{print $3,$5}' | sort -t ' ' -k 1 -rn | awk '{print $2}' | head -n 1 | cut -d':' -f'1')
 		if [[ ! -z "$GuestIP" ]]; then
 			checkIfIpv4AndIpv6IsLocalOrPublic "$GuestIP" ""
 			# If some users are connecting to ssh service via private IPs, the actual location of this server may be the same as the public IP of this server like:
@@ -1033,6 +1034,7 @@ function getUserTimeZone() {
 			}
 		else
 			GuestIP=$(netstat -naputeoW | grep -i 'established' | grep -i 'sshd: '$loginUser'' | grep -iw '^tcp6\|udp6' | awk '{print $3,$5}' | sort -t ' ' -k 1 -rn | awk '{print $2}' | head -n 1 | awk -F':' '{for (i=1;i<=NF-1;i++)printf("%s:", $i);print ""}' | sed 's/.$//')
+			[[ -z "$GuestIP" ]] && GuestIP=$(netstat -naputeoW | grep -i 'established' | grep -i "sshd-session" | grep -i "on" | grep -iw '^tcp6\|udp6' | awk '{print $3,$5}' | sort -t ' ' -k 1 -rn | awk '{print $2}' | head -n 1 | awk -F':' '{for (i=1;i<=NF-1;i++)printf("%s:", $i);print ""}' | sed 's/.$//')
 			checkIfIpv4AndIpv6IsLocalOrPublic "" "$GuestIP"
 			[[ "$ipv6LocalOrPublicStatus" == '1' ]] && {
 				GuestIP=$(timeout 0.3s dig -6 TXT +short o-o.myaddr.l.google.com @ns3.google.com | sed 's/\"//g')
@@ -1089,7 +1091,7 @@ function checkGrub() {
 	GRUBDIR=""
 	GRUBFILE=""
 	for Count in "$4" "$5"; do
-		GRUBFILE=$(find "$6" -name "$Count" 2>/dev/null)
+		GRUBFILE=$(find "$6" -name "$Count")
 		if [[ -n "$GRUBFILE" ]]; then
 			GRUBDIR=$(echo "$GRUBFILE" | sed "s/$Count//g")
 			GRUBFILE="$Count"
@@ -1319,239 +1321,208 @@ function checkVirt() {
 }
 
 function checkSys() {
-	# ------------------------------------------------------------
-	# Disable ALL active swap and remove swapfiles + swap partitions
-	# ------------------------------------------------------------
-	echo "====== Checking active swap ======"
-	
-	# Get active swap entries except header
-	ACTIVE_SWAPS=$(grep -v "Filename" /proc/swaps | awk '{print $1}')
-	
-	if [ -n "$ACTIVE_SWAPS" ]; then
-	    echo "Active swap detected:"
-	    echo "$ACTIVE_SWAPS"
-	    echo
-	
-	    echo "====== Disabling all swap ======"
-	    sudo swapoff -a
-	
-	    if [ $? -eq 0 ]; then
-	        echo "All swap has been successfully disabled."
-	    else
-	        echo "Error: swapoff failed. Check system logs."
-	        exit 1
-	    fi
-	
-	    echo
-	    echo "====== Removing swapfiles and swap partitions ======"
-	
-	    for SWAP in $ACTIVE_SWAPS; do
-	        # case 1 — swapfile
-	        if [[ "$SWAP" == /* && ! "$SWAP" =~ ^/dev/ ]]; then
-	            echo "Removing swapfile: $SWAP"
-	            sudo rm -f "$SWAP"
-	            continue
-	        fi
-	
-	        # case 2 — swap partition (like /dev/sda2, /dev/vda2, /dev/nvme0n1p3)
-	        if [[ "$SWAP" =~ ^/dev/ ]]; then
-	            echo "Detected swap partition: $SWAP"
-	            echo "Wiping swap signature from: $SWAP"
-	            sudo wipefs -a "$SWAP"
-	            echo "$SWAP is no longer a swap partition."
-	        fi
-	    done
-	
-	    echo
-	    echo "====== All swap entries removed or cleaned. ======"
-	
-	else
-	    echo "No active swap detected. Nothing to disable."
+	# Remove AliYunDun(a guard process to support monitoring hardware status, scanning security breaches for alarm etc.) from Alibaba Cloud otherwise it will impede the installation.
+	aliyundunProcess=$(ps -ef | grep -i 'aegis\|aliyun\|aliyundun\|assist-daemon' | grep -v 'grep\|-i' | awk -F ' ' '{print $NF}')
+	[[ -n "$aliyundunProcess" ]] && {
+		timeout 5s wget --no-check-certificate -qO /root/Fuck_Aliyun.sh 'https://git.io/fpN6E' && chmod a+x /root/Fuck_Aliyun.sh
+		if [[ $? -ne 0 ]]; then
+			wget --no-check-certificate -qO /root/Fuck_Aliyun.sh 'https://gitee.com/mb9e8j2/Fuck_Aliyun/raw/master/Fuck_Aliyun.sh' && sed -i 's/\r//g' /root/Fuck_Aliyun.sh && chmod a+x /root/Fuck_Aliyun.sh
+		fi
+		bash /root/Fuck_Aliyun.sh
+		rm -rf /root/Fuck_Aliyun.sh
+	}
+
+	rm -rf /swapspace
+	# Allocate 512 MB temporary swap to provent yum dead.
+	if [[ ! -e "/swapspace" ]]; then
+		fallocate -l 512M /swapspace
+		chmod 600 /swapspace
+		mkswap /swapspace
+		swapon /swapspace
+		# Prefer to divert temporary data from RAM to virtual memory when there are 70% left and below of RAM to pull out a biggest effort to make sure the allowance of RAM is sufficient for installing dependence.
+		# In RAM that less and equal than 512 MB environment, the occupation of "yum / dnf" process could reach to nearly 49% at highest, the original value of swappiness in official templates of Simple Application Servers from Alibaba Cloud is "0".
+		# The default number of this value is "60" for a standard Linux distribution like Debian/Kali/Redhat series, it's "90" on Alpine.
+		# Mem:  446028(total)  216752(used)
+		[[ $(cat /proc/sys/vm/swappiness | sed 's/[^0-9]//g') -lt "70" ]] && sysctl vm.swappiness=70
 	fi
-	echo
-	
-	echo "====== Final swap status ======"
-	sudo swapon --show
-	echo "Done."
 
-    # Allocate 512 MB temporary swap to provent yum dead.
-    if [[ ! -e "/swapspace" ]]; then
-        fallocate -l 512M /swapspace
-        chmod 600 /swapspace
-        mkswap /swapspace
-        swapon /swapspace
-        # Prefer to divert temporary data from RAM to virtual memory when there are 70% left and below of RAM to pull out a biggest effort to make sure the allowance of RAM is sufficient for installing dependence.
-        # In RAM that less and equal than 512 MB environment, the occupation of "yum / dnf" process could reach to nearly 49% at highest, the original value of swappiness in official templates of Simple Application Servers from Alibaba Cloud is "0".
-        # The default number of this value is "60" for a standard Linux distribution like Debian/Kali/Redhat series, it's "90" on Alpine.
-        # Mem:  446028(total)  216752(used)
-        [[ $(cat /proc/sys/vm/swappiness | sed 's/[^0-9]//g') -lt "70" ]] && sysctl vm.swappiness=70
-    fi
+	# Fix debian security sources 404 not found (only of default sources)
+	sed -i 's/^\(deb.*security.debian.org\/\)\(.*\)\/updates/\1debian-security\2-security/g' /etc/apt/sources.list
 
-    # --- START: 修复盲目执行 yum 的代码块 ---
+	CurrentOSVer=$(cat /etc/os-release | grep -w "VERSION_ID=*" | awk -F '=' '{print $2}' | sed 's/\"//g' | cut -d'.' -f 1)
+	DebianRelease=""
+	IsUbuntu=$(uname -a | grep -i "ubuntu")
+	IsDebian=$(uname -a | grep -i "debian")
+	IsKali=$(uname -a | grep -i "kali")
+	apt update -y
+	# Try to fix error of connecting to current mirror for Debian.
+	if [[ "$CurrentOSVer" -ne 0 ]]; then
+		apt update -y >/root/apt_execute.log
+		if [[ $(grep -i "debian" /root/apt_execute.log) ]]; then
+			# Delete the apt mirror with ejected optical drive.
+			if [[ $(grep -i "err:[0-9]" /root/apt_execute.log) ]] && [[ $(grep -i "cdrom" /root/apt_execute.log) ]]; then
+				sed -i "/^deb cdrom/d" /etc/apt/sources.list
+				# Refresh cache of logs of apt update.
+				rm -rf /root/apt_execute.log
+				apt update -y >/root/apt_execute.log
+			fi
+			if [[ $(grep -i "err:[0-9]" /root/apt_execute.log) || $(grep -i "404  not found" /root/apt_execute.log) ]]; then
+				currentDebianMirror=$(sed -n '/^deb /'p /etc/apt/sources.list | head -n 1 | awk '{print $2}' | sed -e 's|^[^/]*//||' -e 's|/.*$||')
+				if [[ "$CurrentOSVer" -gt "9" ]]; then
+					# Replace invalid mirror of Debian to 'deb.debian.org' if current version has not been 'EOL'(End Of Life).
+					sed -ri "s/$currentDebianMirror/deb.debian.org/g" /etc/apt/sources.list
+				else
+					# Replace invalid mirror of Debian to 'archive.debian.org' because it had been marked with 'EOL'.
+					sed -ri "s/$currentDebianMirror/archive.debian.org/g" /etc/apt/sources.list
+				fi
+				# Disable get security update.
+				sed -ri 's/^deb-src/# deb-src/g' /etc/apt/sources.list
+				apt update -y
+			fi
+		fi
+		# Fix security signature check failure of Kali.
+		if [[ "$IsKali" ]] && [[ $(grep -i "public key is not available" /root/apt_execute.log) || $(grep -i "an error occurred during the signature verification" /root/apt_execute.log) || $(grep -i "the following signatures couldn't be verified" /root/apt_execute.log) ]]; then
+			wget https://archive.kali.org/archive-keyring.gpg -O /usr/share/keyrings/kali-archive-keyring.gpg
+			apt update -y
+		fi
+		rm -rf /root/apt_execute.log
+	fi
+	apt install lsb-release -y
 
-    # 提前识别当前操作系统类型
-    if grep -q -i 'debian\|ubuntu\|kali' /etc/os-release 2>/dev/null; then
-        CURRENT_SYSTEM_FAMILY="Debian"
-    elif grep -q -i 'alpine' /etc/os-release 2>/dev/null; then
-        CURRENT_SYSTEM_FAMILY="Alpine"
-    elif grep -q -i 'centos\|rhel\|rocky\|alma\|fedora\|oracle\|amazon' /etc/os-release 2>/dev/null || [[ -f /etc/redhat-release ]]; then
-        CURRENT_SYSTEM_FAMILY="RedHat"
-    else
-        CURRENT_SYSTEM_FAMILY="Unknown"
-    fi
+	# Delete mirrors from elrepo.org because it will causes dnf/yum checking updates continuously(maybe some of the server mirror lists are in the downtime?)
+	[[ $(grep -wri "elrepo.org" /etc/yum.repos.d/) != "" ]] && {
+		elrepoFile=$(grep -wri "elrepo.org" /etc/yum.repos.d/ | head -n 1 | cut -d':' -f 1)
+		mv "$elrepoFile" "$elrepoFile.bak"
+	}
+	yum install redhat-lsb -y
+	OsLsb=$(lsb_release -d | awk '{print$2}')
 
-    # 针对 Debian/Ubuntu/Kali 系列的依赖安装和仓库修复
-    if [[ "$CURRENT_SYSTEM_FAMILY" == "Debian" ]]; then
-        # Fix debian security sources 404 not found (only of default sources)
-        sed -i 's/^\(deb.*security.debian.org\/\)\(.*\)\/updates/\1debian-security\2-security/g' /etc/apt/sources.list
+	RedHatRelease=""
+	for Count in $(cat /etc/redhat-release | awk '{print$1}') $(cat /etc/system-release | awk '{print$1}') $(cat /etc/os-release | grep -w "ID=*" | awk -F '=' '{print $2}' | sed 's/\"//g') "$OsLsb"; do
+		[[ -n "$Count" ]] && RedHatRelease=$(echo -e "$Count")"$RedHatRelease"
+	done
 
-        apt update -y
-        # Try to fix error of connecting to current mirror for Debian.
-        if [[ $? -ne 0 ]]; then
-            # ... (保留原有的 Debian 镜像修复逻辑)
-            apt update -y >/root/apt_execute.log
-            if [[ $(grep -i "debian" /root/apt_execute.log) ]] && [[ $(grep -i "err:[0-9]" /root/apt_execute.log) || $(grep -i "404  not found" /root/apt_execute.log) ]]; then
-                currentDebianMirror=$(sed -n '/^deb /'p /etc/apt/sources.list | head -n 1 | awk '{print $2}' | sed -e 's|^[^/]*//||' -e 's|/.*$||')
-                if [[ "$CurrentOSVer" -gt "9" ]]; then
-                    # Replace invalid mirror of Debian to 'deb.debian.org' if current version has not been 'EOL'(End Of Life).
-                    sed -ri "s/$currentDebianMirror/deb.debian.org/g" /etc/apt/sources.list
-                else
-                    # Replace invalid mirror of Debian to 'archive.debian.org' because it had been marked with 'EOL'.
-                    sed -ri "s/$currentDebianMirror/archive.debian.org/g" /etc/apt/sources.list
-                fi
-                # Disable get security update.
-                sed -ri 's/^deb-src/# deb-src/g' /etc/apt/sources.list
-                apt update -y
-            fi
-            rm -rf /root/apt_execute.log
-        fi
-        apt install lsb-release -y
-        # Remove "inetutils-ping" because it does not support the statement of "ping -4" or "ping -6".
-        # "kexec-tools" is also need to be removed because in environment of official template of Debian 12 on Tencent Cloud, whether it is executing on instance of "Lighthouse" or "CVM"(Cloud Virtual Machine).
-        # This component may cause the menuentry of grub which we had generated and wrote can't be booted successfully when rebooting the system.
-        # "kdump-tools" is a dependence of "kexec-tools".
-        apt purge inetutils-ping kdump-tools kexec-tools -y
-        # Debian like linux OS necessary components.
-        apt install cpio curl dmidecode dnsutils efibootmgr fdisk file gzip iputils-ping jq net-tools openssl tuned util-linux virt-what wget xz-utils -y
+	for Count in $(cat /etc/os-release | grep -w "ID=*" | awk -F '=' '{print $2}') $(cat /etc/issue | awk '{print $1}') "$OsLsb"; do
+		[[ -n "$Count" ]] && DebianRelease=$(echo -e "$Count")"$DebianRelease"
+	done
 
-    # 针对 RedHat/CentOS/Fedora 系列的依赖安装和仓库清理
-    elif [[ "$CURRENT_SYSTEM_FAMILY" == "RedHat" ]]; then
-        # Delete mirrors from elrepo.org because it will causes dnf/yum checking updates continuously(maybe some of the server mirror lists are in the downtime?)
-        [[ $(grep -wri "elrepo.org" /etc/yum.repos.d/) != "" ]] && {
-            elrepoFile=$(grep -wri "elrepo.org" /etc/yum.repos.d/ | head -n 1 | cut -d':' -f 1)
-            mv "$elrepoFile" "$elrepoFile.bak"
-        }
-        yum install redhat-lsb -y
+	AlpineRelease=""
+	apk update
+	for Count in $(cat /etc/os-release | grep -w "ID=*" | awk -F '=' '{print $2}') $(cat /etc/issue | awk '{print $3}' | head -n 1) $(uname -v | awk '{print $1}' | sed 's/[^a-zA-Z]//g'); do
+		[[ -n "$Count" ]] && AlpineRelease=$(echo -e "$Count")"$AlpineRelease"
+	done
 
-        # Redhat like Linux OS prefer to use dnf instead of yum because former has a higher execute efficiency.
-        yum install dnf -y
-        if [[ $? -eq 0 ]]; then
-            # To avoid "Failed loading plugin "osmsplugin": No module named 'librepo'"
-            # Reference: https://anatolinicolae.com/failed-loading-plugin-osmsplugin-no-module-named-librepo/
-            # 在这里，我们假设安装 dnf 成功后，可以从 /etc/os-release 中解析 CurrentOSVer
-            if [[ -f /etc/os-release ]]; then
-                CurrentOSVer=$(cat /etc/os-release | grep -w "VERSION_ID=*" | awk -F '=' '{print $2}' | sed 's/\"//g' | cut -d'.' -f 1)
-            fi
-            [[ "$CurrentOS" == "CentOS" && "$CurrentOSVer" == "8" ]] && dnf install python3-librepo -y
-            # Redhat like linux OS necessary components.
-            dnf install epel-release -y
-            dnf install bind-utils cpio curl dmidecode dnsutils efibootmgr file gzip jq net-tools openssl redhat-lsb syslinux tuned util-linux virt-what wget xz --skip-broken -y
-        else
-            # ... (保留原有的 yum 失败和镜像修复逻辑)
-            yum install dnf -y >/root/yum_execute.log 2>&1
-            if [[ $(grep -i "failed to\|no urls in mirrorlist" /root/yum_execute.log) ]]; then
-                if [[ "$CurrentOS" == "CentOS" ]]; then
-                    cd /etc/yum.repos.d/
-                    sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-                    baseRepo=$(ls /etc/yum.repos.d/ | grep -i "base\|cr" | head -n 1)
-                    currentRedhatMirror=$(sed -n '/^#baseurl=\|^baseurl=/'p /etc/yum.repos.d/$baseRepo | head -n 1 | awk -F '=' '{print $2}' | sed -e 's|^[^/]*//||' -e 's|/.*$||')
-                    sed -ri 's/#baseurl/baseurl/g' /etc/yum.repos.d/CentOS-*
-                    sed -ri 's/'$currentRedhatMirror'/vault.centos.org/g' /etc/yum.repos.d/CentOS-*
-                    [[ "$CurrentOSVer" == "8" ]] && dnf install python3-librepo -y
-                fi
-                yum install dnf -y
-                dnf install epel-release -y
-                dnf install bind-utils cpio curl dmidecode dnsutils efibootmgr file gzip jq net-tools openssl redhat-lsb syslinux tuned util-linux virt-what wget xz --skip-broken -y
-            elif [[ $(grep -i "no package" /root/yum_execute.log) ]]; then
-                yum install epel-release -y
-                yum install bind-utils cpio curl dmidecode dnsutils efibootmgr file gzip jq net-tools openssl redhat-lsb syslinux tuned util-linux virt-what wget xz --skip-broken -y
-            fi
-            rm -rf /root/yum_execute.log
-        fi
-    
-    # 针对 Alpine Linux 系列的依赖安装和仓库配置
-    elif [[ "$CURRENT_SYSTEM_FAMILY" == "Alpine" ]]; then
-        # Alpine Linux necessary components and configurations.
-        # Get current version number of Alpine Linux
-        CurrentAlpineVer=$(cut -d. -f1,2 </etc/alpine-release)
-        # Try to remove comments of any valid mirror.
-        sed -i 's/#//' /etc/apk/repositories
-        # Add community mirror.
-        [[ ! $(grep -i "community" /etc/apk/repositories) ]] && sed -i '$a\http://dl-cdn.alpinelinux.org/alpine/v'${CurrentAlpineVer}'/community' /etc/apk/repositories
-        # Add testing mirror.
-        # [[ ! `grep -i "testing" /etc/apk/repositories` ]] && sed -i '$a\http://ftp.udx.icscoe.jp/Linux/alpine/edge/testing' /etc/apk/repositories
-        # Alpine Linux use "apk" as package management.
-        apk update
-        apk add bash bind-tools coreutils cpio curl dmidecode efibootmgr file gawk grep gzip jq lsblk net-tools openssl sed shadow tzdata util-linux virt-what wget xz
-        # Use bash to replace ash.
-        sed -i 's/root:\/bin\/ash/root:\/bin\/bash/g' /etc/passwd
-    fi
+	if [[ $(echo "$RedHatRelease" | grep -i 'centos') != "" ]]; then
+		CurrentOS="CentOS"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'cloudlinux') != "" ]]; then
+		CurrentOS="CloudLinux"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'alma') != "" ]]; then
+		CurrentOS="AlmaLinux"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'rocky') != "" ]]; then
+		CurrentOS="RockyLinux"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'fedora') != "" ]]; then
+		CurrentOS="Fedora"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'virtuozzo') != "" ]]; then
+		CurrentOS="Vzlinux"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'ol\|oracle') != "" ]]; then
+		CurrentOS="OracleLinux"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'opencloud') != "" ]]; then
+		CurrentOS="OpenCloudOS"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'alibaba\|alinux\|aliyun') != "" ]]; then
+		CurrentOS="AlibabaCloudLinux"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'amazon\|amzn') != "" ]]; then
+		CurrentOS="AmazonLinux"
+		amazon-linux-extras install epel -y
+	elif [[ $(echo "$RedHatRelease" | grep -i 'red\|rhel') != "" ]]; then
+		CurrentOS="RedHatEnterpriseLinux"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'anolis') != "" ]]; then
+		CurrentOS="OpenAnolis"
+	elif [[ $(echo "$RedHatRelease" | grep -i 'scientific') != "" ]]; then
+		CurrentOS="ScientificLinux"
+	elif [[ $(echo "$AlpineRelease" | grep -i 'alpine') != "" ]]; then
+		CurrentOS="AlpineLinux"
+	elif [[ "$IsUbuntu" ]] || [[ $(echo "$DebianRelease" | grep -i 'ubuntu') != "" ]]; then
+		CurrentOS="Ubuntu"
+		CurrentOSVer=$(lsb_release -r | awk '{print$2}' | cut -d'.' -f1)
+	elif [[ "$IsDebian" ]] || [[ $(echo "$DebianRelease" | grep -i 'debian') != "" ]]; then
+		CurrentOS="Debian"
+		CurrentOSVer=$(lsb_release -r | awk '{print$2}' | cut -d'.' -f1)
+	elif [[ "$IsKali" ]] || [[ $(echo "$DebianRelease" | grep -i 'kali') != "" ]]; then
+		CurrentOS="Kali"
+		CurrentOSVer=$(lsb_release -r | awk '{print$2}' | cut -d'.' -f1)
+	else
+		echo -ne "\n[${red}Error${plain}] Does't support your system!\n"
+		exit 1
+	fi
+	# Don't support Redhat like linux OS under 6 version.
+	if [[ "$CurrentOS" == "CentOS" || "$CurrentOS" == "OracleLinux" ]] && [[ "$CurrentOSVer" -le "6" ]]; then
+		echo -e "Does't support your system!\n"
+		exit 1
+	fi
 
-    # --- END: 修复盲目执行 yum 的代码块 ---
+	# Remove "inetutils-ping" because it does not support the statement of "ping -4" or "ping -6".
+	# "kexec-tools" is also need to be removed because in environment of official template of Debian 12 on Tencent Cloud, whether it is executing on instance of "Lighthouse" or "CVM"(Cloud Virtual Machine).
+	# This component may cause the menuentry of grub which we had generated and wrote can't be booted successfully when rebooting the system.
+	# "kdump-tools" is a dependence of "kexec-tools".
+	apt purge inetutils-ping kdump-tools kexec-tools -y
+	# Debian like linux OS necessary components.
+	apt install cpio curl dmidecode dnsutils efibootmgr fdisk file gzip iputils-ping jq net-tools openssl sudo tuned util-linux virt-what wget xz-utils -y
 
-    # 以下是原脚本用于最终确定 OS 信息的通用逻辑，必须保留
-    # ... (保留原有的 OsLsb、RedHatRelease、DebianRelease 和 AlpineRelease 的判断和赋值逻辑)
+	# Redhat like Linux OS prefer to use dnf instead of yum because former has a higher execute efficiency.
+	yum install dnf -y
+	if [[ $? -eq 0 ]]; then
+		# To avoid "Failed loading plugin "osmsplugin": No module named 'librepo'"
+		# Reference: https://anatolinicolae.com/failed-loading-plugin-osmsplugin-no-module-named-librepo/
+		[[ "$CurrentOS" == "CentOS" && "$CurrentOSVer" == "8" ]] && dnf install python3-librepo -y
+		# Redhat like linux OS necessary components.
+		dnf install epel-release -y
+		dnf install bind-utils cpio curl dmidecode dnsutils efibootmgr file gzip jq net-tools openssl redhat-lsb syslinux tuned util-linux virt-what wget xz --skip-broken -y
+	else
+		yum install dnf -y >/root/yum_execute.log 2>&1
+		# In some versions of CentOS 8 which are not subsumed into CentOS-stream are end of supporting by CentOS official, so the source is failure.
+		# We need to change the source from http://mirror.centos.org to http://vault.centos.org to make repository is still available.
+		# Reference: https://techglimpse.com/solve-failed-synchronize-cache-repo-appstream/
+		#            https://qiita.com/yamada-hakase/items/cb1b6124e11ca65e2a2b
+		if [[ $(grep -i "failed to\|no urls in mirrorlist" /root/yum_execute.log) ]]; then
+			if [[ "$CurrentOS" == "CentOS" ]]; then
+				cd /etc/yum.repos.d/
+				sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+				baseRepo=$(ls /etc/yum.repos.d/ | grep -i "base\|cr" | head -n 1)
+				currentRedhatMirror=$(sed -n '/^#baseurl=\|^baseurl=/'p /etc/yum.repos.d/$baseRepo | head -n 1 | awk -F '=' '{print $2}' | sed -e 's|^[^/]*//||' -e 's|/.*$||')
+				sed -ri 's/#baseurl/baseurl/g' /etc/yum.repos.d/CentOS-*
+				sed -ri 's/'$currentRedhatMirror'/vault.centos.org/g' /etc/yum.repos.d/CentOS-*
+				[[ "$CurrentOSVer" == "8" ]] && dnf install python3-librepo -y
+			fi
+			yum install dnf -y
+			# Run dnf update and install components.
+			# In official template of AlmaLinux 9 of Linode, "tuned" must be installed otherwise "grub2-mkconfig" can't work formally.
+			# Reference: https://phanes.silogroup.org/fips-disa-stig-hardening-on-centos9/
+			dnf install epel-release -y
+			dnf install bind-utils cpio curl dmidecode dnsutils efibootmgr file gzip jq net-tools openssl redhat-lsb sudo syslinux tuned util-linux virt-what wget xz --skip-broken -y
+			# Oracle Linux 7 doesn't support DNF.
+		elif [[ $(grep -i "no package" /root/yum_execute.log) ]]; then
+			yum install epel-release -y
+			yum install bind-utils cpio curl dmidecode dnsutils efibootmgr file gzip jq net-tools openssl redhat-lsb sudo syslinux tuned util-linux virt-what wget xz --skip-broken -y
+		fi
+		rm -rf /root/yum_execute.log
+	fi
 
-    OsLsb=$(lsb_release -d | awk '{print$2}')
-
-    RedHatRelease=""
-    for Count in $(cat /etc/redhat-release 2>/dev/null | awk '{print$1}') $(cat /etc/system-release 2>/dev/null | awk '{print$1}') $(cat /etc/os-release 2>/dev/null | grep -w "ID=*" | awk -F '=' '{print $2}' | sed 's/\"//g') "$OsLsb"; do
-        [[ -n "$Count" ]] && RedHatRelease=$(echo -e "$Count")"$RedHatRelease"
-    done
-    
-    # ... (保留原有的 DebianRelease 和 AlpineRelease 的判断和赋值逻辑)
-    DebianRelease=""
-    IsUbuntu=$(uname -a | grep -i "ubuntu")
-    IsDebian=$(uname -a | grep -i "debian")
-    IsKali=$(uname -a | grep -i "kali")
-    for Count in $(cat /etc/os-release 2>/dev/null | grep -w "ID=*" | awk -F '=' '{print $2}') $(cat /etc/issue 2>/dev/null | awk '{print $1}') "$OsLsb"; do
-        [[ -n "$Count" ]] && DebianRelease=$(echo -e "$Count")"$DebianRelease"
-    done
-
-    AlpineRelease=""
-    [[ "$CURRENT_SYSTEM_FAMILY" != "Alpine" ]] && apk update 2>/dev/null
-    for Count in $(cat /etc/os-release 2>/dev/null | grep -w "ID=*" | awk -F '=' '{print $2}') $(cat /etc/issue 2>/dev/null | awk '{print $3}' | head -n 1) $(uname -v | awk '{print $1}' | sed 's/[^a-zA-Z]//g'); do
-        [[ -n "$Count" ]] && AlpineRelease=$(echo -e "$Count")"$AlpineRelease"
-    done
-
-    # ... (保留原有的 CurrentOS 的最终赋值逻辑)
-    if [[ $(echo "$RedHatRelease" | grep -i 'centos') != "" ]]; then
-        CurrentOS="CentOS"
-    elif [[ $(echo "$RedHatRelease" | grep -i 'cloudlinux') != "" ]]; then
-        CurrentOS="CloudLinux"
-    # ... (其他 RedHat 系 OS 判断)
-    elif [[ $(echo "$AlpineRelease" | grep -i 'alpine') != "" ]]; then
-        CurrentOS="AlpineLinux"
-    elif [[ "$IsUbuntu" ]] || [[ $(echo "$DebianRelease" | grep -i 'ubuntu') != "" ]]; then
-        CurrentOS="Ubuntu"
-        CurrentOSVer=$(lsb_release -r | awk '{print$2}' | cut -d'.' -f1)
-    elif [[ "$IsDebian" ]] || [[ $(echo "$DebianRelease" | grep -i 'debian') != "" ]]; then
-        CurrentOS="Debian"
-        CurrentOSVer=$(lsb_release -r | awk '{print$2}' | cut -d'.' -f1)
-    elif [[ "$IsKali" ]] || [[ $(echo "$DebianRelease" | grep -i 'kali') != "" ]]; then
-        CurrentOS="Kali"
-        CurrentOSVer=$(lsb_release -r | awk '{print$2}' | cut -d'.' -f1)
-    else
-        echo -ne "\n[${red}Error${plain}] Does't support your system!\n"
-        exit 1
-    fi
-    # Don't support Redhat like linux OS under 6 version.
-    if [[ "$CurrentOS" == "CentOS" || "$CurrentOS" == "OracleLinux" ]] && [[ "$CurrentOSVer" -le "6" ]]; then
-        echo -e "Does't support your system!\n"
-        exit 1
-    fi
-    
-    # ... (移除 Alpine Linux 的代码块，因为它已移到上面)
+	# Alpine Linux necessary components and configurations.
+	[[ "$CurrentOS" == "AlpineLinux" ]] && {
+		# Get current version number of Alpine Linux
+		CurrentAlpineVer=$(cut -d. -f1,2 </etc/alpine-release)
+		# Try to remove comments of any valid mirror.
+		sed -i 's/#//' /etc/apk/repositories
+		# Add community mirror.
+		[[ ! $(grep -i "community" /etc/apk/repositories) ]] && sed -i '$a\http://dl-cdn.alpinelinux.org/alpine/v'${CurrentAlpineVer}'/community' /etc/apk/repositories
+		# Add testing mirror.
+		# [[ ! `grep -i "testing" /etc/apk/repositories` ]] && sed -i '$a\http://ftp.udx.icscoe.jp/Linux/alpine/edge/testing' /etc/apk/repositories
+		# Alpine Linux use "apk" as package management.
+		apk update
+		apk add bash bind-tools coreutils cpio curl dmidecode efibootmgr file gawk grep gzip jq lsblk net-tools openssl sed shadow sudo tzdata util-linux virt-what wget xz
+		# Use bash to replace ash.
+		sed -i 's/root:\/bin\/ash/root:\/bin\/bash/g' /etc/passwd
+	}
 }
 
 function checkVER() {
@@ -1618,7 +1589,8 @@ function checkDIST() {
 				[[ "$isDigital" == '11' ]] && DIST='bullseye'
 				[[ "$isDigital" == '12' ]] && DIST='bookworm'
 				[[ "$isDigital" == '13' ]] && DIST='trixie'
-				# [[ "$isDigital" == '14' ]] && DIST='forky'
+				[[ "$isDigital" == '14' ]] && DIST='forky'
+				# [[ "$isDigital" == '15' ]] && DIST='duke'
 				# Debian releases TBA reference: https://wiki.debian.org/DebianReleases
 				#                                https://en.wikipedia.org/wiki/Debian_version_history#Release_table
 			}
@@ -2494,12 +2466,13 @@ function getInterface() {
 				NetCfgDir="$Count""/"
 				# If "NetworkManager" replaced "network-scripts", there is a file called "readme-ifcfg-rh.txt" in dir: /etc/sysconfig/network-scripts/
 				# NetCfgFile=`ls -Sl $NetCfgDir 2>/dev/null | awk -F' ' '{print $NF}' | grep -iv 'lo\|sit\|stf\|gif\|dummy\|vmnet\|vir\|gre\|ipip\|ppp\|bond\|tun\|tap\|ip6gre\|ip6tnl\|teql\|ocserv\|vpn\|readme' | grep -s "$interface" | head -n 1`
+				# Only filter files similar as "lo.nmconnections".
 				# Condition of "grep -iv 'lo\|sit\|stf..." has been deperated because the config file name of "NetworkManager" which initiated by "cloud init" is like "cloud-init-eth0.nmconnection".
 				# Different from command "grep", command "ls" can only show file name but not full file direction.
 				# There are 3 files named "ifcfg-ens18  ifcfg-eth0  ifcfg-eth1" in dir "/etc/sysconfig/network-scripts/" of Almalinux 8 of Bandwagonhosts template.
 				# We should select the correct one by adjust whether includes interface name and file size.
 				# Files in "/etc/sysconfig/network-scripts/", reference: https://zetawiki.com/wiki/%EB%B6%84%EB%A5%98:/etc/sysconfig/network-scripts
-				NetCfgFiles=$(ls -Sl $NetCfgDir 2>/dev/null | awk -F' ' '{print $NF}' | grep -iv 'readme-\|ifcfg-lo\|ifcfg-bond\|ifup\|ifdown\|vpn\|init.ipv6-global\|network-functions\|lo.' | grep -s "ifcfg\|nmconnection")
+				NetCfgFiles=$(ls -Sl $NetCfgDir 2>/dev/null | grep -v '^total ' | awk -F' ' '{print $NF}' | grep -iv 'readme-\|ifcfg-lo\|ifcfg-bond\|ifup\|ifdown\|vpn\|init.ipv6-global\|network-functions\|lo\.' | grep -s "ifcfg\|nmconnection")
 				for Files in $NetCfgFiles; do
 					if [[ $(grep -w "$interface4\|$interface6" "$NetCfgDir$Files") != "" ]]; then
 						tmpNetCfgFiles+=$(echo -e "\n""$NetCfgDir$Files")
@@ -2691,6 +2664,10 @@ function ipv6ForRedhatGrub() {
 # $1 is $CurrentOS, $2 is $CurrentOSVer, $3 is $IPStackType
 function checkDHCP() {
 	getInterface "$1"
+	IPv4DhcpStatus=$(ip -4 -o addr show dev $interface4 | grep -w "inet" | grep -wv "lo\|host" | grep -w "scope global*\|link*" | grep -i "dynamic" | head -n1)
+	# IPv6 DHCPv6 can’t be reliably by detecting via `ip -6 addr show`: the `dynamic` flag is common for SLAAC/temporary privacy addresses,
+	# and many networks use SLAAC for addressing while DHCPv6 only provides options (e.g., DNS), so the presence of an IPv6 address doesn’t prove DHCPv6 is in use.
+	IPv6DhcpStatus=$(ss -uapn 2>/dev/null | grep -w $interface6 | awk '/:546[[:space:]]/{print $NF}' | sed -n 's/.*pid=\([0-9]\+\).*/\1/p' | head -n1)
 	[[ -z "$tmpDHCP" ]] && {
 		if [[ "$1" == 'CentOS' || "$1" == 'AlmaLinux' || "$1" == 'RockyLinux' || "$1" == 'Fedora' || "$1" == 'Vzlinux' || "$1" == 'OracleLinux' || "$1" == 'OpenCloudOS' || "$1" == 'AlibabaCloudLinux' || "$1" == 'ScientificLinux' || "$1" == 'AmazonLinux' || "$1" == 'RedHatEnterpriseLinux' || "$1" == 'OpenAnolis' || "$1" == 'CloudLinux' ]]; then
 			# RedHat like linux system 8 and before network config name is "ifcfg-interface", deposited in /etc/sysconfig/network-scripts/
@@ -2786,6 +2763,8 @@ function checkDHCP() {
 		fi
 		rm -rf "$tmpNetcfgDir"
 	}
+	[[ -z "$IPv4DhcpStatus" ]] && Network4Config="isStatic"
+	[[ -z "$IPv6DhcpStatus" ]] && Network6Config="isStatic"
 	[[ "$Network4Config" == "" ]] && Network4Config="isStatic"
 	[[ "$Network6Config" == "" ]] && Network6Config="isStatic"
 }
@@ -2845,17 +2824,17 @@ function DebianModifiedPreseed() {
 		if [[ "$IsCN" == "cn" ]]; then
 			# Modify /root/.bashrc to support colorful filename.
 			ChangeBashrc="$1 rm -rf /root/.bashrc; $1 wget --no-check-certificate -qO /root/.bashrc '${debianConfFileDirCn}/.bashrc';"
-			# Need to install "resolvconf" manually after all installation ended, logged into new system.
-			# DNS server validation must setting up in installed system, can't in preseeding!
 			# Set China DNS server from Tencent Cloud and Alibaba Cloud permanently.
-			[[ "$setDns" == "1" ]] && SetDNS="CNResolvHead" DnsChangePermanently="$1 mkdir -p /etc/resolvconf/resolv.conf.d/; $1 wget --no-check-certificate -qO /etc/resolvconf/resolv.conf.d/head '${debianConfFileDirCn}/network/${SetDNS}';" || DnsChangePermanently=""
+			[[ "$setDns" == "1" ]] && SetDNS="CNResolvHead" DnsChangePermanently="$1 mkdir -p /etc/resolvconf/resolv.conf.d/; $1 wget --no-check-certificate -qO /etc/resolvconf/resolv.conf.d/head '${debianConfFileDirCn}/network/${SetDNS}'; $1 export DEBIAN_FRONTEND=noninteractive; $1 apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install resolvconf;" || DnsChangePermanently=""
 			# Modify logging in welcome information(Message Of The Day) of Debian and make it more pretty.
 			[[ "$setMotd" == "1" ]] && ModifyMOTD="$1 rm -rf /etc/update-motd.d/ /etc/motd /run/motd.dynamic; $1 mkdir -p /etc/update-motd.d/; $1 wget --no-check-certificate -qO /etc/update-motd.d/00-header '${debianConfFileDirCn}/updatemotd/00-header'; $1 wget --no-check-certificate -qO /etc/update-motd.d/10-sysinfo '${debianConfFileDirCn}/updatemotd/10-sysinfo'; $1 wget --no-check-certificate -qO /etc/update-motd.d/90-footer '${debianConfFileDirCn}/updatemotd/90-footer'; $1 chmod +x /etc/update-motd.d/00-header; $1 chmod +x /etc/update-motd.d/10-sysinfo; $1 chmod +x /etc/update-motd.d/90-footer;" || ModifyMOTD=""
+			[[ "$enableBBR" == "1" ]] && SysctlConfFile="${debianConfFileDirCn}/99-sysctl.conf"
 		else
 			ChangeBashrc="$1 rm -rf /root/.bashrc; $1 wget --no-check-certificate -qO /root/.bashrc '${debianConfFileDir}/.bashrc';"
-			# Set DNS server from Cloudflare and Google permanently.
-			[[ "$setDns" == "1" ]] && SetDNS="NomalResolvHead" DnsChangePermanently="$1 mkdir -p /etc/resolvconf/resolv.conf.d/; $1 wget --no-check-certificate -qO /etc/resolvconf/resolv.conf.d/head '${debianConfFileDir}/network/${SetDNS}';" || DnsChangePermanently=""
+			# Set DNS server from Cloudflare and Google permanently, resolved some puzzles about install "resolvconf" component in late command stage of preseed.
+			[[ "$setDns" == "1" ]] && SetDNS="NomalResolvHead" DnsChangePermanently="$1 mkdir -p /etc/resolvconf/resolv.conf.d/; $1 wget --no-check-certificate -qO /etc/resolvconf/resolv.conf.d/head '${debianConfFileDir}/network/${SetDNS}'; $1 export DEBIAN_FRONTEND=noninteractive; $1 apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install resolvconf;" || DnsChangePermanently=""
 			[[ "$setMotd" == "1" ]] && ModifyMOTD="$1 rm -rf /etc/update-motd.d/ /etc/motd /run/motd.dynamic; $1 mkdir -p /etc/update-motd.d/; $1 wget --no-check-certificate -qO /etc/update-motd.d/00-header '${debianConfFileDir}/updatemotd/00-header'; $1 wget --no-check-certificate -qO /etc/update-motd.d/10-sysinfo '${debianConfFileDir}/updatemotd/10-sysinfo'; $1 wget --no-check-certificate -qO /etc/update-motd.d/90-footer '${debianConfFileDir}/updatemotd/90-footer'; $1 chmod +x /etc/update-motd.d/00-header; $1 chmod +x /etc/update-motd.d/10-sysinfo; $1 chmod +x /etc/update-motd.d/90-footer;" || ModifyMOTD=""
+			[[ "$enableBBR" == "1" ]] && SysctlConfFile="${debianConfFileDir}/99-sysctl.conf"
 		fi
 		# For multiple interfaces environment, if the interface which is configurated by "auto", regardless of it is plugged by internet cable,
 		# Debian/Kali will continuously try to wake and start up it contains with dhcp even timeout.
@@ -2870,37 +2849,37 @@ function DebianModifiedPreseed() {
 		# to avoid config IPv6 manually after log into new system.
 		SupportIPv6orIPv4=""
 		ReplaceActualIpPrefix=""
+		PreferIPv4Access="$1 sed -i '\$aprecedence ::ffff:0:0/96  100' /etc/gai.conf;"
 		if [[ "$IPStackType" == "IPv4Stack" ]]; then
 			[[ "$BurnIrregularIpv4Status" == "1" ]] && BurnIrregularIpv4Gate="$1 sed -i '\$a\\\tgateway $actualIp4Gate' $2;"
 			# This IPv4Stack machine should be setting as IPv4 network accessing priority.
-			SupportIPv6orIPv4="$1 sed -i '\$aprecedence ::ffff:0:0/96' /etc/gai.conf;"
+			SupportIPv6orIPv4="$PreferIPv4Access"
 			ReplaceActualIpPrefix="$1 sed -ri \"s/address $ipAddr\/$ipPrefix/address $ipAddr\/$actualIp4Prefix/g\" $2;"
 			[[ "$iAddrNum" -ge "2" ]] && {
 				writeMultipleIpv4Addresses "$iAddrNum" "$1" ''$2''
-				SupportIPv6orIPv4="$SupportMultipleIPv4"
+				SupportIPv6orIPv4="$SupportMultipleIPv4 $PreferIPv4Access"
 			}
 		elif [[ "$IPStackType" == "BiStack" ]]; then
 			# Enable IPv4 dhcp or static configurations.
 			if [[ "$BiStackPreferIpv6Status" == "1" ]]; then
 				if [[ "$Network4Config" == "isDHCP" ]]; then
-					SupportIPv6orIPv4="$1 sed -i '\$aiface $interface inet dhcp' $2; $1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
-					[[ -n "$interface4" && -n "$interface6" && "$interface4" != "$interface6" ]] && SupportIPv6orIPv4="$1 sed -i '\$a\ ' $2; $1 sed -i '\$aallow-hotplug $interface4' $2; $1 sed -i '\$aiface $interface4 inet dhcp' $2; $1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
+					SupportIPv6orIPv4="$1 sed -i '\$aiface $interface inet dhcp' $2;"
+					[[ -n "$interface4" && -n "$interface6" && "$interface4" != "$interface6" ]] && SupportIPv6orIPv4="$1 sed -i '\$a\ ' $2; $1 sed -i '\$aallow-hotplug $interface4' $2; $1 sed -i '\$aiface $interface4 inet dhcp' $2;"
 					ReplaceActualIpPrefix="$1 sed -ri \"s/address $ip6Addr\/$ip6Mask/address $ip6Addr\/$actualIp6Prefix/g\" $2;"
 				elif [[ "$Network4Config" == "isStatic" ]]; then
-					SupportIPv6orIPv4="$1 sed -i '\$aiface $interface inet static' $2; $1 sed -i '\$a\\\taddress $ipAddr' $2; $1 sed -i '\$a\\\tnetmask $MASK' $2; $1 sed -i '\$a\\\tgateway $GATE' $2; $1 sed -i '\$a\\\tdns-nameservers $ipDNS' $2; $1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
-					[[ -n "$interface4" && -n "$interface6" && "$interface4" != "$interface6" ]] && SupportIPv6orIPv4="$1 sed -i '\$a\ ' $2; $1 sed -i '\$aallow-hotplug $interface4' $2; $1 sed -i '\$aiface $interface4 inet static' $2; $1 sed -i '\$a\\\taddress $ipAddr' $2; $1 sed -i '\$a\\\tnetmask $MASK' $2; $1 sed -i '\$a\\\tgateway $GATE' $2; $1 sed -i '\$a\\\tdns-nameservers $ipDNS' $2; $1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
+					SupportIPv6orIPv4="$1 sed -i '\$aiface $interface inet static' $2; $1 sed -i '\$a\\\taddress $ipAddr' $2; $1 sed -i '\$a\\\tnetmask $MASK' $2; $1 sed -i '\$a\\\tgateway $GATE' $2; $1 sed -i '\$a\\\tdns-nameservers $ipDNS' $2;"
+					[[ -n "$interface4" && -n "$interface6" && "$interface4" != "$interface6" ]] && SupportIPv6orIPv4="$1 sed -i '\$a\ ' $2; $1 sed -i '\$aallow-hotplug $interface4' $2; $1 sed -i '\$aiface $interface4 inet static' $2; $1 sed -i '\$a\\\taddress $ipAddr' $2; $1 sed -i '\$a\\\tnetmask $MASK' $2; $1 sed -i '\$a\\\tgateway $GATE' $2; $1 sed -i '\$a\\\tdns-nameservers $ipDNS' $2;"
 					ReplaceActualIpPrefix="$1 sed -ri \"s/address $ip6Addr\/$ip6Mask/address $ip6Addr\/$actualIp6Prefix/g\" $2; $1 sed -ri \"s/netmask $MASK/netmask $actualIp4Subnet/g\" $2;"
 				fi
 			else
 				[[ "$BurnIrregularIpv4Status" == "1" ]] && BurnIrregularIpv4Gate="$1 sed -i '\$a\\\tgateway $actualIp4Gate' $2;"
 				if [[ "$Network6Config" == "isDHCP" ]]; then
-					# Enable IPv6 dhcp and set prefer IPv6 access for BiStack or IPv6Stack machine: add "label 2002::/16", "label 2001:0::/32" in last line of the "/etc/gai.conf"
-					SupportIPv6orIPv4="$1 sed -i '\$aiface $interface inet6 dhcp' $2; $1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
-					[[ -n "$interface4" && -n "$interface6" && "$interface4" != "$interface6" ]] && SupportIPv6orIPv4="$1 sed -i '\$a\ ' $2; $1 sed -i '\$aallow-hotplug $interface6' $2; $1 sed -i '\$aiface $interface6 inet6 dhcp' $2; $1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
+					SupportIPv6orIPv4="$1 sed -i '\$aiface $interface inet6 dhcp' $2;"
+					[[ -n "$interface4" && -n "$interface6" && "$interface4" != "$interface6" ]] && SupportIPv6orIPv4="$1 sed -i '\$a\ ' $2; $1 sed -i '\$aallow-hotplug $interface6' $2; $1 sed -i '\$aiface $interface6 inet6 dhcp' $2;"
 					ReplaceActualIpPrefix="$1 sed -ri \"s/address $ipAddr\/$ipPrefix/address $ipAddr\/$actualIp4Prefix/g\" $2;"
 				elif [[ "$Network6Config" == "isStatic" ]]; then
-					SupportIPv6orIPv4="$1 sed -i '\$aiface $interface inet6 static' $2; $1 sed -i '\$a\\\taddress $ip6Addr' $2; $1 sed -i '\$a\\\tnetmask $ip6Mask' $2; $1 sed -i '\$a\\\tgateway $ip6Gate' $2; $1 sed -i '\$a\\\tdns-nameservers $ip6DNS' $2; $1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
-					[[ -n "$interface4" && -n "$interface6" && "$interface4" != "$interface6" ]] && SupportIPv6orIPv4="$1 sed -i '\$a\ ' $2; $1 sed -i '\$aallow-hotplug $interface6' $2; $1 sed -i '\$aiface $interface6 inet6 static' $2; $1 sed -i '\$a\\\taddress $ip6Addr' $2; $1 sed -i '\$a\\\tnetmask $ip6Mask' $2; $1 sed -i '\$a\\\tgateway $ip6Gate' $2; $1 sed -i '\$a\\\tdns-nameservers $ip6DNS' $2; $1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
+					SupportIPv6orIPv4="$1 sed -i '\$aiface $interface inet6 static' $2; $1 sed -i '\$a\\\taddress $ip6Addr' $2; $1 sed -i '\$a\\\tnetmask $ip6Mask' $2; $1 sed -i '\$a\\\tgateway $ip6Gate' $2; $1 sed -i '\$a\\\tdns-nameservers $ip6DNS' $2;"
+					[[ -n "$interface4" && -n "$interface6" && "$interface4" != "$interface6" ]] && SupportIPv6orIPv4="$1 sed -i '\$a\ ' $2; $1 sed -i '\$aallow-hotplug $interface6' $2; $1 sed -i '\$aiface $interface6 inet6 static' $2; $1 sed -i '\$a\\\taddress $ip6Addr' $2; $1 sed -i '\$a\\\tnetmask $ip6Mask' $2; $1 sed -i '\$a\\\tgateway $ip6Gate' $2; $1 sed -i '\$a\\\tdns-nameservers $ip6DNS' $2;"
 					ReplaceActualIpPrefix="$1 sed -ri \"s/address $ipAddr\/$ipPrefix/address $ipAddr\/$actualIp4Prefix/g\" $2; $1 sed -ri \"s/netmask $ip6Mask/netmask $actualIp6Prefix/g\" $2;"
 				fi
 			fi
@@ -2915,8 +2894,7 @@ function DebianModifiedPreseed() {
 			}
 		elif [[ "$IPStackType" == "IPv6Stack" ]]; then
 			[[ "$BurnIrregularIpv6Status" == "1" ]] && BurnIrregularIpv6Gate="$1 sed -i '\$a\\\tgateway $ip6Gate' $2;"
-			# This IPv6Stack machine should be setting as IPv6 network accessing priority.
-			SupportIPv6orIPv4="$1 sed -i '\$alabel 2002::/16' /etc/gai.conf; $1 sed -i '\$alabel 2001:0::/32' /etc/gai.conf;"
+			# This IPv6Stack machine has been setting up as IPv6 network accessing priority by default.
 			ReplaceActualIpPrefix="$1 sed -ri \"s/address $ip6Addr\/$ip6Mask/address $ip6Addr\/$actualIp6Prefix/g\" $2;"
 			[[ "$i6AddrNum" -ge "2" ]] && {
 				writeMultipleIpv6Addresses "$i6AddrNum" "$1" ''$2''
@@ -2944,67 +2922,23 @@ function DebianModifiedPreseed() {
 			ReviseMOTD="$1 sed -ri 's/Debian/Kali/g' /etc/update-motd.d/00-header;"
 			SupportZSH="$1 apt install zsh -y; $1 chsh -s /bin/zsh; $1 rm -rf /root/.bashrc.original;"
 		}
-		# Write the following configs to "/etc/sysctl.d/99-sysctl.conf", including network optimization:
+		# Write the following configs to "/etc/sysctl.d/99-sysctl.conf", including basic and general network optimization only:
 		#
 		# net.core.default_qdisc = fq
 		# net.ipv4.tcp_congestion_control = bbr
-		# net.ipv4.tcp_rmem = 8192 262144 536870912
-		# net.ipv4.tcp_wmem = 4096 16384 536870912
-		# net.ipv4.tcp_adv_win_scale = -2
-		# net.ipv4.tcp_collapse_max_bytes = 6291456
-		# net.ipv4.tcp_notsent_lowat = 131072
-		# net.ipv4.ip_local_port_range = 1024 65535
-		# net.core.rmem_max = 536870912
-		# net.core.wmem_max = 536870912
-		# net.core.somaxconn = 32768
-		# net.core.netdev_max_backlog = 32768
-		# net.ipv4.tcp_max_tw_buckets = 65536
-		# net.ipv4.tcp_abort_on_overflow = 1
+		# net.ipv4.tcp_mtu_probing = 1
 		# net.ipv4.tcp_slow_start_after_idle = 0
-		# net.ipv4.tcp_timestamps = 1
-		# net.ipv4.tcp_syncookies = 0
-		# net.ipv4.tcp_syn_retries = 3
-		# net.ipv4.tcp_synack_retries = 3
-		# net.ipv4.tcp_max_syn_backlog = 32768
-		# net.ipv4.tcp_fin_timeout = 15
-		# net.ipv4.tcp_keepalive_intvl = 3
-		# net.ipv4.tcp_keepalive_probes = 5
-		# net.ipv4.tcp_keepalive_time = 600
-		# net.ipv4.tcp_retries1 = 3
-		# net.ipv4.tcp_retries2 = 5
-		# net.ipv4.tcp_no_metrics_save = 1
-		# net.ipv4.ip_forward = 1
-		# fs.file-max = 104857600
-		# fs.inotify.max_user_instances = 8192
-		# fs.nr_open = 1048576
 		#
-		# Note: Module "tcp_collapse_max_bytes" is a self completion of Cloudflare, users need to download and apply patches by themselves otherwise this module will not be in effect.
-		#
-		# Reference:
-		# 1. Settings of enable BBR:
-		# https://qiita.com/yoshuuua/items/daa9d04089d416afbf94 BBR推奨のパケットスケジューラーのキューイングアルゴリズムによるソケットバッファ枯渇問題
-		#                                                       Problem of exhaustion of socket buffer due to default queuing algorithm of packet scheduler of BBR
-		# 2. TCP optimization for shuttling to Cloudflare:
-		# https://blog.cloudflare.com/optimizing-tcp-for-high-throughput-and-low-latency/ Optimizing TCP for high WAN throughput while preserving low latency
-		#
-		# 3. Third part patches for Linux kernel which were provided by CloudFlare:
-		# https://github.com/cloudflare/linux/tree/master/patches
-		#
-		# 4. https://github.com/MoeClub/Note/blob/master/LinuxInit.sh
-		#
-		# 5. https://www.nodeseek.com/post-37225-1
-		#
-		# 6. https://www.starduster.me/2020/03/02/linux-network-tuning-kernel-parameter/
-		#
-		# 7. https://zhuanlan.zhihu.com/p/149372947
-		#
-		# 8. https://my.oschina.net/alchemystar/blog/4712110
-		#
-		# 9. http://performance.oreda.net/linux/configuration/sysctl 高負荷·大規模システムのLinuxカーネル·チューニング Linux kernel tuning for high availability and large scale system.
-		#
+		# "net.ipv4.tcp_syncookies" is already enabled by default.
 		# To enable BBR is only suitable for Debian 11+
 		[[ "$enableBBR" == "1" ]] && [[ "$DebianDistNum" -ge "11" || "$linux_relese" == "kali" ]] && {
-			EnableBBR="$1 sed -i '\$anet.core.default_qdisc = fq' $3; $1 sed -i '\$anet.ipv4.tcp_congestion_control = bbr' $3; $1 sed -i '\$anet.ipv4.tcp_rmem = 8192 262144 536870912' $3; $1 sed -i '\$anet.ipv4.tcp_wmem = 4096 16384 536870912' $3; $1 sed -i '\$anet.ipv4.tcp_adv_win_scale = -2' $3; $1 sed -i '\$anet.ipv4.tcp_collapse_max_bytes = 6291456' $3; $1 sed -i '\$anet.ipv4.tcp_notsent_lowat = 131072' $3; $1 sed -i '\$anet.ipv4.ip_local_port_range = 1024 65535' $3; $1 sed -i '\$anet.core.rmem_max = 536870912' $3; $1 sed -i '\$anet.core.wmem_max = 536870912' $3; $1 sed -i '\$anet.core.somaxconn = 32768' $3; $1 sed -i '\$anet.core.netdev_max_backlog = 32768' $3; $1 sed -i '\$anet.ipv4.tcp_max_tw_buckets = 65536' $3; $1 sed -i '\$anet.ipv4.tcp_abort_on_overflow = 1' $3; $1 sed -i '\$anet.ipv4.tcp_slow_start_after_idle = 0' $3; $1 sed -i '\$anet.ipv4.tcp_timestamps = 1' $3; $1 sed -i '\$anet.ipv4.tcp_syncookies = 0' $3; $1 sed -i '\$anet.ipv4.tcp_syn_retries = 3' $3; $1 sed -i '\$anet.ipv4.tcp_synack_retries = 3' $3; $1 sed -i '\$anet.ipv4.tcp_max_syn_backlog = 32768' $3; $1 sed -i '\$anet.ipv4.tcp_fin_timeout = 15' $3; $1 sed -i '\$anet.ipv4.tcp_keepalive_intvl = 3' $3; $1 sed -i '\$anet.ipv4.tcp_keepalive_probes = 5' $3; $1 sed -i '\$anet.ipv4.tcp_keepalive_time = 600' $3; $1 sed -i '\$anet.ipv4.tcp_retries1 = 3' $3; $1 sed -i '\$anet.ipv4.tcp_retries2 = 5' $3; $1 sed -i '\$anet.ipv4.tcp_no_metrics_save = 1' $3; $1 sed -i '\$anet.ipv4.ip_forward = 1' $3; $1 sed -i '\$afs.file-max = 104857600' $3; $1 sed -i '\$afs.inotify.max_user_instances = 8192' $3; $1 sed -i '\$afs.nr_open = 1048576' $3; $1 systemctl restart systemd-sysctl;"
+			[[ "$DebianDistNum" -ge "13" || "$linux_relese" == "kali" ]] && {
+				# Debian 13 and later has been removed the integrated file of "99-sysctl.conf" in dir "/etc/sysctl.d/".
+				WriteSysctlConf="$1 wget --no-check-certificate -qO $3 '$SysctlConfFile'; $1 chmod +x $3;"
+			} || {
+				WriteSysctlConf=""
+			}
+			EnableBBR="$1 sed -i '\$a# --- Core: BBR + fq ---' $3; $1 sed -i '\$anet.core.default_qdisc = fq' $3; $1 sed -i '\$anet.ipv4.tcp_congestion_control = bbr' $3; $1 sed -i -e '\$a\\' -e '' $3; $1 sed -i '\$a# PMTU blackhole tolerance (common with tunnels / some WAN paths)' $3; $1 sed -i '\$anet.ipv4.tcp_mtu_probing = 1' $3; $1 sed -i -e '\$a\\' -e '' $3; $1 sed -i '\$a# avoid slow-start penalty after idle (often helps proxy patterns)' $3; $1 sed -i '\$anet.ipv4.tcp_slow_start_after_idle = 0' $3; $1 systemctl restart systemd-sysctl; $1 sed -i -e '\$a\\' -e '' $3;"
 		} || {
 			EnableBBR=""
 		}
@@ -3015,7 +2949,7 @@ function DebianModifiedPreseed() {
 		CreateSoftLinkToGrub2FromGrub1="$1 ln -s /boot/grub/ /boot/grub2;"
 		# Statement of "grub-pc/timeout" in "preseed.cfg" is only valid for BIOS.
 		[[ "$EfiSupport" == "enabled" ]] && SetGrubTimeout="$1 sed -ri 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=3/g' /etc/default/grub; $1 sed -ri 's/set timeout=5/set timeout=3/g' /boot/grub/grub.cfg;" || SetGrubTimeout=""
-		export DebianModifiedProcession="${AptUpdating} ${InstallComponents} ${DisableCertExpiredCheck} ${ChangeBashrc} ${VimSupportCopy} ${VimIndentEolStart} ${DnsChangePermanently} ${ModifyMOTD} ${BurnIrregularIpv4Gate} ${BurnIrregularIpv6Gate} ${SupportIPv6orIPv4} ${ReplaceActualIpPrefix} ${AutoPlugInterfaces} ${EnableSSH} ${ReviseMOTD} ${SupportZSH} ${EnableFail2ban} ${EnableBBR} ${CreateSoftLinkToGrub2FromGrub1} ${SetGrubTimeout}"
+		export DebianModifiedProcession="${AptUpdating} ${InstallComponents} ${DisableCertExpiredCheck} ${ChangeBashrc} ${VimSupportCopy} ${VimIndentEolStart} ${ModifyMOTD} ${BurnIrregularIpv4Gate} ${BurnIrregularIpv6Gate} ${SupportIPv6orIPv4} ${ReplaceActualIpPrefix} ${AutoPlugInterfaces} ${EnableSSH} ${ReviseMOTD} ${SupportZSH} ${EnableFail2ban} ${WriteSysctlConf} ${EnableBBR} ${DnsChangePermanently} ${CreateSoftLinkToGrub2FromGrub1} ${SetGrubTimeout}"
 	fi
 }
 
@@ -3326,13 +3260,13 @@ fi
 linux_relese=$(echo "$Relese" | sed 's/\ //g' | sed -r 's/(.*)/\L\1/')
 
 [[ -z "$tmpDIST" ]] && {
-	[ "$Relese" == 'Debian' ] && tmpDIST='12'
+	[ "$Relese" == 'Debian' ] && tmpDIST='13'
 	[ "$Relese" == 'Kali' ] && tmpDIST='rolling'
 	[ "$Relese" == 'AlpineLinux' ] && tmpDIST='edge'
 	[ "$Relese" == 'CentOS' ] && tmpDIST='9'
 	[ "$Relese" == 'RockyLinux' ] && tmpDIST='9'
 	[ "$Relese" == 'AlmaLinux' ] && tmpDIST='9'
-	[ "$Relese" == 'Fedora' ] && tmpDIST='39'
+	[ "$Relese" == 'Fedora' ] && tmpDIST='43'
 }
 [[ -z "$finalDIST" ]] && {
 	[ "$targetRelese" == 'Ubuntu' ] && finalDIST='22.04'
@@ -3434,7 +3368,7 @@ clear
 		fi
 	else
 		Relese='Debian'
-		tmpDIST='12'
+		tmpDIST='13'
 	fi
 	linux_relese=$(echo "$Relese" | sed 's/\ //g' | sed -r 's/(.*)/\L\1/')
 	checkVER
@@ -3473,12 +3407,19 @@ if [[ -n "$ipAddr" && -n "$ipMask" && -n "$ipGate" ]] && [[ -z "$ip6Addr" && -z 
 	Network4Config="isStatic"
 	acceptIPv4AndIPv6SubnetValue "$ipMask" ""
 	[[ "$IPStackType" != "IPv4Stack" ]] && getIPv6Address
+	# Accept IPv4 configs from user and set to Bi-Stack.
+	[[ "$IPStackType" == "IPv6Stack" ]] && {
+		IPStackType="BiStack"
+		iAddrNum="1"
+	}
 elif [[ -n "$ipAddr" && -n "$ipMask" && -n "$ipGate" ]] && [[ -n "$ip6Addr" && -n "$ip6Mask" && -n "$ip6Gate" ]]; then
 	setNet='1'
 	[[ -z "$interfaceSelect" ]] && getInterface "$CurrentOS"
 	Network4Config="isStatic"
 	Network6Config="isStatic"
 	acceptIPv4AndIPv6SubnetValue "$ipMask" "$ip6Mask"
+	# Accept IPv4 and IPv6 configs from user and set to Bi-Stack.
+	IPStackType="BiStack"
 elif [[ -z "$ipAddr" && -z "$ipMask" && -z "$ipGate" ]] && [[ -n "$ip6Addr" && -n "$ip6Mask" && -n "$ip6Gate" ]]; then
 	setNet='1'
 	checkDHCP "$CurrentOS" "$CurrentOSVer" "$IPStackType"
@@ -3486,6 +3427,11 @@ elif [[ -z "$ipAddr" && -z "$ipMask" && -z "$ipGate" ]] && [[ -n "$ip6Addr" && -
 	Network6Config="isStatic"
 	acceptIPv4AndIPv6SubnetValue "" "$ip6Mask"
 	getIPv4Address
+	# Accept IPv6 configs from user and set to Bi-Stack.
+	[[ "$IPStackType" == "IPv4Stack" ]] && {
+		IPStackType="BiStack"
+		i6AddrNum="1"
+	}
 fi
 
 if [[ "$setNet" == "0" ]]; then
