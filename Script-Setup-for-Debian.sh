@@ -14,7 +14,6 @@ DIRCOLORS="/root/.dircolors"
 TIMEZONE="Asia/Shanghai"
 HOSTS_FILE="/etc/hosts"
 RESOLV_FILE="/etc/resolv.conf"
-SWAP_SIZE="1G"
 VIRTIO_BALLOON_BLACKLIST="/etc/modprobe.d/blacklist-virtio-balloon.conf"
 GITHUB_RAW_PROXY_PREFIX="https://gh-proxy.com/"
 
@@ -182,6 +181,20 @@ EOF
     fi
 }
 
+detect_physical_memory_mb() {
+    local mem_kb mem_mb
+
+    mem_kb="$(awk '/^MemTotal:/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)"
+    if [[ ! "$mem_kb" =~ ^[0-9]+$ ]] || (( mem_kb <= 0 )); then
+        err "Failed to detect physical memory from /proc/meminfo."
+        exit 1
+    fi
+
+    # Round up to a whole MB so the swapfile is at least as large as detected RAM.
+    mem_mb=$(( (mem_kb + 1023) / 1024 ))
+    echo "$mem_mb"
+}
+
 swapfile_active() {
     swapon --show=NAME --noheadings 2>/dev/null | grep -qx "/swapfile"
 }
@@ -194,14 +207,23 @@ swapfile_size_mb() {
     fi
 }
 
+active_non_swapfile_swap() {
+    swapon --show=NAME --noheadings 2>/dev/null | awk '$1 != "/swapfile" {print}' || true
+}
+
+fstab_non_swapfile_swap() {
+    if [[ -f /etc/fstab ]]; then
+        awk 'NF > 0 && $1 !~ /^#/ && $3 == "swap" && $1 != "/swapfile" {print}' /etc/fstab 2>/dev/null || true
+    fi
+}
+
 ensure_swap_fstab_entry() {
     cp /etc/fstab "/etc/fstab.bak.$(date +%Y%m%d%H%M%S)"
-    if ! grep -qE '^[[:space:]]*/swapfile[[:space:]]+none[[:space:]]+swap[[:space:]]+' /etc/fstab; then
-        echo '/swapfile none swap sw 0 0' >> /etc/fstab
-        log "Added /swapfile entry to /etc/fstab."
-    else
-        log "/swapfile entry already exists in /etc/fstab."
-    fi
+
+    # Keep exactly one standard /swapfile entry to avoid duplicate fstab rows.
+    sed -i '/^[[:space:]]*\/swapfile[[:space:]].*[[:space:]]swap[[:space:]]/d' /etc/fstab
+    echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    log "Ensured a single standard /swapfile entry in /etc/fstab."
 }
 
 bashrc_has_ls_color() {
@@ -286,7 +308,7 @@ curl_github_raw_to_file() {
 # ------------------------------------------------------
 log "=== Starting Debian/Ubuntu system configuration... ==="
 
-apt_install_missing sudo curl wget unzip dnsutils net-tools cron jq nano htop ca-certificates lsb-release 2>/dev/null \
+apt_install_missing sudo curl wget unzip dnsutils tree net-tools cron jq nano htop ca-certificates lsb-release iperf3 2>/dev/null \
     || warn "Some base packages failed to install, continuing..."
 
 # ------------------------------------------------------
@@ -424,6 +446,7 @@ fi
 # ===========================================================
 log "====== Checking current swap status ======"
 free -h || true
+swapon --show || true
 echo
 
 CREATE_SWAP="n"
@@ -436,75 +459,82 @@ if [[ "$CREATE_SWAP" != "y" ]]; then
     swapon --show || true
     echo
 else
-    log "User selected: create swapfile of size $SWAP_SIZE"
+    REQUIRED_MB="$(detect_physical_memory_mb)"
+    SWAP_SIZE="${REQUIRED_MB}M"
+    log "User selected: create swapfile. Detected RAM: ${REQUIRED_MB} MB. Target swapfile size: ${SWAP_SIZE}."
 
-    EXIST_SWAP_PART="$(grep -E '^[^#].*\sswap\s' /etc/fstab | grep -v '/swapfile' || true)"
-    if echo "$EXIST_SWAP_PART" | grep -q "/dev/"; then
-        warn "Detected existing swap partition:"
-        echo "$EXIST_SWAP_PART"
-        warn "Skipping swapfile creation."
+    ACTIVE_OTHER_SWAP="$(active_non_swapfile_swap)"
+    if [[ -n "$ACTIVE_OTHER_SWAP" ]]; then
+        warn "Detected active swap that is not /swapfile:"
+        echo "$ACTIVE_OTHER_SWAP"
+        warn "Skipping /swapfile creation to avoid duplicate swap configuration."
         swapon --show || true
         echo
     else
-        if [[ "$SWAP_SIZE" =~ ^[0-9]+[Gg]$ ]]; then
-            REQUIRED_MB=$(( ${SWAP_SIZE%[Gg]} * 1024 ))
-        elif [[ "$SWAP_SIZE" =~ ^[0-9]+[Mm]$ ]]; then
-            REQUIRED_MB=$(( ${SWAP_SIZE%[Mm]} ))
-        else
-            err "Invalid SWAP_SIZE format: $SWAP_SIZE"
-            exit 1
-        fi
-
-        CURRENT_SWAP_MB="$(swapfile_size_mb)"
-
-        if [[ -f /swapfile ]] && swapfile_active && (( CURRENT_SWAP_MB >= REQUIRED_MB )); then
-            log "Existing /swapfile is active and size is sufficient (${CURRENT_SWAP_MB} MB >= ${REQUIRED_MB} MB). Skipping recreation."
-            ensure_swap_fstab_entry
+        FSTAB_OTHER_SWAP="$(fstab_non_swapfile_swap)"
+        if [[ -n "$FSTAB_OTHER_SWAP" ]]; then
+            warn "Detected non-/swapfile swap entry in /etc/fstab:"
+            echo "$FSTAB_OTHER_SWAP"
+            warn "Skipping /swapfile creation to avoid conflicting persistent swap configuration."
             swapon --show || true
-            free -h || true
             echo
         else
-            if [[ -f /swapfile ]]; then
-                log "Existing /swapfile detected but not active or size is insufficient. Recreating..."
-                swapoff /swapfile 2>/dev/null || true
-                rm -f /swapfile || true
-            fi
+            CURRENT_SWAP_MB="$(swapfile_size_mb)"
 
-            log "Checking disk free space..."
-            AVAILABLE_KB="$(df --output=avail / | tail -1 | tr -d ' ' 2>/dev/null || echo 0)"
-            AVAILABLE_MB=$((AVAILABLE_KB / 1024))
+            if [[ -f /swapfile ]] && swapfile_active && (( CURRENT_SWAP_MB >= REQUIRED_MB )); then
+                log "Existing /swapfile is active and size is sufficient (${CURRENT_SWAP_MB} MB >= ${REQUIRED_MB} MB). Keeping it."
+                log "Repairing /etc/fstab entry for /swapfile if needed..."
+                ensure_swap_fstab_entry
+                swapon --show || true
+                free -h || true
+                echo
+            else
+                if [[ -f /swapfile ]]; then
+                    log "Existing /swapfile detected but not active or size is insufficient (${CURRENT_SWAP_MB} MB < ${REQUIRED_MB} MB). Recreating..."
+                    swapoff /swapfile 2>/dev/null || true
+                    rm -f /swapfile || true
+                fi
 
-            log "Available space: ${AVAILABLE_MB} MB"
-            log "Required: ${REQUIRED_MB} MB"
+                log "Checking disk free space..."
+                AVAILABLE_KB="$(df --output=avail / | tail -1 | tr -d ' ' 2>/dev/null || echo 0)"
+                AVAILABLE_MB=$((AVAILABLE_KB / 1024))
 
-            if (( AVAILABLE_MB < REQUIRED_MB + 200 )); then
-                err "Not enough disk space for swapfile."
-                exit 1
-            fi
+                # Keep a small safety margin so the root filesystem is not filled completely.
+                RESERVED_MB=512
 
-            log "Creating swapfile..."
-            if ! fallocate -l "$SWAP_SIZE" /swapfile 2>/dev/null; then
-                warn "fallocate failed, falling back to dd..."
-                if ! dd if=/dev/zero of=/swapfile bs=1M count="$REQUIRED_MB" status=none; then
-                    err "Failed to create swapfile."
+                log "Available space: ${AVAILABLE_MB} MB"
+                log "Required swap size: ${REQUIRED_MB} MB"
+                log "Reserved free space: ${RESERVED_MB} MB"
+
+                if (( AVAILABLE_MB < REQUIRED_MB + RESERVED_MB )); then
+                    err "Not enough disk space for swapfile. Need at least $((REQUIRED_MB + RESERVED_MB)) MB free."
                     exit 1
                 fi
+
+                log "Creating swapfile with size ${SWAP_SIZE}..."
+                if ! fallocate -l "$SWAP_SIZE" /swapfile 2>/dev/null; then
+                    warn "fallocate failed, falling back to dd..."
+                    if ! dd if=/dev/zero of=/swapfile bs=1M count="$REQUIRED_MB" status=none; then
+                        err "Failed to create swapfile."
+                        exit 1
+                    fi
+                fi
+
+                chmod 600 /swapfile
+                mkswap /swapfile >/dev/null
+                swapon /swapfile
+
+                log "Swap enabled:"
+                swapon --show || true
+                free -h || true
+                echo
+
+                log "Configuring persistent swap..."
+                ensure_swap_fstab_entry
+
+                log "Swap setup complete."
+                echo
             fi
-
-            chmod 600 /swapfile
-            mkswap /swapfile >/dev/null
-            swapon /swapfile
-
-            log "Swap enabled:"
-            swapon --show || true
-            free -h || true
-            echo
-
-            log "Configuring persistent swap..."
-            ensure_swap_fstab_entry
-
-            log "Swap setup complete."
-            echo
         fi
     fi
 fi
@@ -564,11 +594,11 @@ log "[5/6] Updating DNS configuration based on region..."
 if [[ "$REGION" == "China" ]]; then
     NEW_DNS1="223.5.5.5"
     NEW_DNS2="223.6.6.6"
-    TEST_DOMAIN="baidu.com"
+    TEST_DOMAIN="www.baidu.com"
 else
     NEW_DNS1="1.1.1.1"
     NEW_DNS2="1.0.0.1"
-    TEST_DOMAIN="google.com"
+    TEST_DOMAIN="www.google.com"
 fi
 
 DNS_MODE_DESC="Static resolv.conf"
